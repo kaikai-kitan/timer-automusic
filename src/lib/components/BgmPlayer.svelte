@@ -6,12 +6,12 @@
   export let category = 'lofi';
 
   const CATEGORIES = [
-    { id: 'lofi', label: 'Lo-Fi', desc: '作業に最適な定番' },
-    { id: 'chill', label: 'Chill', desc: '深い集中向け' },
-    { id: 'synthwave', label: 'Synthwave', desc: 'ノリ良く作業' },
+    { id: 'lofi', label: 'ローファイ', desc: '作業に最適な定番' },
+    { id: 'chill', label: 'チル', desc: '深い集中向け' },
+    { id: 'synthwave', label: 'シンセウェーブ', desc: 'ノリ良く作業' },
     { id: 'nature', label: '自然音', desc: '雨・森・水音' },
-    { id: 'jazz', label: 'Jazz', desc: 'カフェの空気' },
-    { id: 'classical', label: 'Classical', desc: '静かな集中' }
+    { id: 'jazz', label: 'ジャズ', desc: 'カフェの空気' },
+    { id: 'classical', label: 'クラシック', desc: '静かな集中' }
   ];
 
   /** @type {HTMLDivElement} */
@@ -246,7 +246,7 @@
     <div class="error">{errorMsg}</div>
   {:else if currentSource === 'fallback'}
     <div class="notice">
-      ※ APIキー未設定 or レート制限のためプリセットBGMで再生中
+      ※ APIキー未設定またはレート制限のためプリセットBGMで再生中
     </div>
   {/if}
 

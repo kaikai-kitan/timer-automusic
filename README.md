@@ -1,106 +1,71 @@
-# 集中タイマー × BGM (SvelteKit)
+# 集中タイマー × BGM
 
-タイマー時間を設定すると、YouTube Data API から作業用BGM動画を自動取得し、再生開始するアプリ。
+タイマーを設定すると、設定時間に合った作業用BGMをYouTubeから自動検索・再生するWebアプリです。
 
-## 構成
+---
 
-- **フロント**: SvelteKit + Svelte 4
-- **デプロイ先**: Vercel (`@sveltejs/adapter-vercel`)
-- **外部API**: YouTube Data API v3 / YouTube IFrame Player API
+## 概要
 
-## セットアップ
+「タイマーをセットしてスタートボタンを押す」だけで、作業用BGMが自動で流れ始めます。  
+BGMはカテゴリ（ローファイ・チル・自然音など）から選択でき、気に入らなければスキップも可能です。タイマーが終了すると、アラームとともにBGMも自動で停止します。
 
-### 1. 依存関係のインストール
+---
 
-```bash
-npm install
-```
+## 主な機能
 
-### 2. YouTube Data API キーの取得
+### タイマー
+- 任意の時間（分・秒）を入力して設定
+- プリセットボタン（5分 / 15分 / 25分ポモドーロ / 45分 / 60分 / 90分）
+- スタート・一時停止・リセット
+- タイマー終了時のアラーム音と通知（ブラウザ通知）
 
-1. [Google Cloud Console](https://console.cloud.google.com/) でプロジェクトを作成
-2. 「APIとサービス」→「ライブラリ」で **YouTube Data API v3** を有効化
-3. 「認証情報」→「APIキーを作成」
-4. 推奨: 作成したAPIキーに「APIキーの制限」をかけ、YouTube Data API v3 のみ許可
+### BGM自動取得・再生
+- タイマー時間に応じて YouTube Data API v3 でBGMを自動検索
+- タイマースタートと同時に自動再生
+- 音量調整・ミュート
+- 気に入らない場合は別のBGMにスキップ（再検索）
+- APIキー未設定・クォータ超過時はフォールバックBGMで継続再生
 
-### 3. 環境変数の設定
+### BGMカテゴリ
+| カテゴリ | 内容 |
+|---------|------|
+| ローファイ | 作業に最適な定番 |
+| チル | 深い集中向け |
+| シンセウェーブ | ノリ良く作業 |
+| 自然音 | 雨・森・水音 |
+| ジャズ | カフェの空気 |
+| クラシック | 静かな集中 |
 
-```bash
-cp .env.example .env
-```
+---
 
-`.env` を開いて `YOUTUBE_API_KEY` を実際のキーに置き換える。
+## 設計要件
 
-> **APIキー無しでも動かしたい場合**: 取得処理が失敗するとフォールバックBGM (Lofi Girl の 24/7 ストリーム) で再生を継続するため、開発時はキー無しでも UI 動作確認できます。
-
-### 4. 開発サーバ起動
-
-```bash
-npm run dev
-```
-
-→ http://localhost:5173
-
-### 5. ビルド
-
-```bash
-npm run build
-npm run preview
-```
-
-## デプロイ (Vercel)
-
-```bash
-vercel
-```
-
-または GitHub と連携してプッシュ自動デプロイ。
-
-**Vercel ダッシュボード** → Project Settings → Environment Variables で
-`YOUTUBE_API_KEY` を登録してください（`.env` はデプロイされません）。
-
-## ファイル構成
+### システムアーキテクチャ
 
 ```
-src/
-├── app.html                            # HTMLシェル
-├── app.css                             # グローバルCSS変数とリセット
-├── lib/components/
-│   ├── Timer.svelte                    # タイマー（自己完結、イベント発火）
-│   └── BgmPlayer.svelte                # YouTubeプレイヤーラッパー
-└── routes/
-    ├── +layout.svelte                  # 全ページ共通レイアウト
-    ├── +page.svelte                    # メインページ（オーケストレーション）
-    └── api/youtube/+server.js          # YouTube検索エンドポイント
+ブラウザ（ユーザー）
+  → タイマー時間を設定してスタート
+  → SvelteKit サーバーサイド（/api/youtube）にリクエスト
+  → YouTube Data API v3 で動画を検索・Video IDを取得
+  → Video ID をフロントエンドに返却
+  → YouTube IFrame Player API で再生開始
+  → タイマー終了時に自動停止
 ```
 
-## 設計上のポイント
+APIキーはサーバーサイドのみで使用し、クライアントには公開されません。
 
-### 1. APIキーはサーバーサイドにのみ存在
+### 技術スタック
 
-`$env/static/private` から読み込むため、クライアントバンドルには含まれません。
-フロントは `/api/youtube?category=lofi&minutes=25` を叩くだけ。
+| 分類 | 技術 |
+|------|------|
+| フロントエンド | SvelteKit 2 / Svelte 4 |
+| ホスティング | Vercel |
+| BGM検索 | YouTube Data API v3 |
+| BGM再生 | YouTube IFrame Player API |
 
-### 2. タイマー時間 vs 動画長さのフォールバック
+### 非機能要件
 
-YouTube Data API は exact-duration フィルタを持たないので、`videoDuration=long`
-(20分超) で長めの動画を取り、タイマー終了時に IFrame Player API の `stopVideo()`
-で停止させる戦略です（仕様書 1.2 のフォールバック処理に対応）。
-
-### 3. レート制限ハンドリング
-
-API が `403` を返した場合（クォータ超過 / キー無効）、エラーで止めず
-固定の Lofi BGM (`jfKfPfyJRdk`) にフォールバックします。レスポンスに
-`source: 'fallback'` が立つので UI で軽く明示しています。
-
-### 4. スキップ時の重複回避
-
-直近5件の Video ID をクライアント側でメモして `skip` パラメータで送信、
-サーバ側で除外フィルタしているので「同じ動画ばかり来る」を回避します。
-
-## 拡張ポイント（仕様書 1.2 / 将来）
-
-- **Supabase 連携**: お気に入りBGM履歴 / カスタムプリセット保存
-- **ポモドーロのセッション管理**: 4セットごとに長休憩を自動挿入
-- **動画の長さ厳密マッチ**: `videos.list?part=contentDetails` で ISO8601 duration を取得し
-  タイマー秒数との差が小さいものを優先する二段階検索
+- **パフォーマンス**: タイマーの遅延なし。API通信中はローディング表示
+- **エラーハンドリング**: APIクォータ超過・キー未設定時はフォールバックBGMで継続
+- **APIキー保護**: サーバーサイドのみで YouTube API キーを使用（クライアントに漏洩しない）
+- **広告対応**: Google AdSense 広告スロットを3箇所（上部・中間・フッター）に設置済み

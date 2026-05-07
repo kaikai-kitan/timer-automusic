@@ -157,7 +157,7 @@
         class:active={!isRunning && inputMin === min && inputSec === 0}
         on:click={() => selectPreset(min)}
         disabled={isRunning}>
-        {min}分{min === 25 ? ' (Pomodoro)' : ''}
+        {min}分{min === 25 ? '（ポモドーロ）' : ''}
       </button>
     {/each}
   </div>
