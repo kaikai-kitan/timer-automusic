@@ -138,6 +138,7 @@
     </div>
     <!-- ▲ 広告ここまで -->
     <p class="footer-note">© 集中タイマー × BGM</p>
+    <a href="/privacy" class="privacy-link">プライバシーポリシー</a>
   </footer>
 </div>
 
@@ -236,6 +237,16 @@
     font-size: 11px;
     color: var(--text-muted);
     opacity: 0.5;
+  }
+
+  .privacy-link {
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.6;
+    text-decoration: none;
+  }
+  .privacy-link:hover {
+    opacity: 1;
   }
 
   .toast {
