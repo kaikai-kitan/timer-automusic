@@ -1,5 +1,5 @@
 import { json, error } from '@sveltejs/kit';
-import { YOUTUBE_API_KEY } from '$env/dynamic/private';
+import { env } from '$env/dynamic/private';
 
 /**
  * カテゴリ別の検索クエリ。
@@ -46,7 +46,7 @@ export async function GET({ url, fetch: serverFetch }) {
   const videoDuration = minutes < 4 ? 'medium' : 'long';
 
   // APIキー未設定 → フォールバック (開発時に APIキーなしでも動かせるように)
-  if (!YOUTUBE_API_KEY) {
+  if (!env.YOUTUBE_API_KEY) {
     return json(buildFallback('APIキー未設定'));
   }
 
@@ -58,7 +58,7 @@ export async function GET({ url, fetch: serverFetch }) {
   apiUrl.searchParams.set('videoEmbeddable', 'true');
   apiUrl.searchParams.set('safeSearch', 'moderate');
   apiUrl.searchParams.set('maxResults', '15');
-  apiUrl.searchParams.set('key', YOUTUBE_API_KEY);
+  apiUrl.searchParams.set('key', env.YOUTUBE_API_KEY);
 
   let res;
   try {
